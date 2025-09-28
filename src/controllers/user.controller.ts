@@ -7,8 +7,187 @@ import {
   isUsernameOrEmailTaken,
   comparePassword,
 } from "@/utils/user.helpers";
+import jwt from "jsonwebtoken";
+
+const generateToken = (user: any) => {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET not configured");
+  }
+
+  return jwt.sign(
+    {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+};
 
 export const userController = {
+  loginUser: async (req: Request, res: Response) => {
+    try {
+      const { emailOrUsername, password } = req.body;
+
+      // Buscar usuario por email o username
+      const user = await User.findOne({
+        $or: [
+          { email: normalize(emailOrUsername) },
+          { username: normalize(emailOrUsername) },
+        ],
+      }).lean();
+
+      if (!user) {
+        return res.status(401).json({
+          error: "Invalid credentials",
+        });
+      }
+
+      // Verificar si el usuario está activo
+      if (!user.active) {
+        return res.status(401).json({
+          error: "Account is deactivated. Please contact support",
+        });
+      }
+
+      // Verificar contraseña
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({
+          error: "Invalid credentials",
+        });
+      }
+
+      // Generar token
+      const token = generateToken(user);
+
+      // Preparar respuesta sin contraseña
+      const userResponse = {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        active: user.active,
+        registerDate: user.registerDate,
+      };
+
+      res.status(200).json({
+        message: "Login successful",
+        user: userResponse,
+        token,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({
+        error: "Internal server error",
+      });
+    }
+  },
+
+  // Función para obtener el perfil del usuario autenticado
+  getProfile: async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: "Authentication required",
+        });
+      }
+
+      const user = await User.findById(req.user.id).select("-password").lean();
+      if (!user) {
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+
+      res.status(200).json({ user });
+    } catch (error) {
+      console.error("Get profile error:", error);
+      res.status(500).json({
+        error: "Internal server error",
+      });
+    }
+  },
+
+  // Función para crear admin (solo otro admin puede hacerlo)
+  createAdmin: async (req: Request, res: Response) => {
+    try {
+      const { username, email, password } = req.body;
+
+      // Verificar que quien hace la petición es admin
+      if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({
+          error: "Only admins can create admin accounts",
+        });
+      }
+
+      // Verificar dominios bloqueados
+      if (isEmailBlocked(email)) {
+        return res.status(400).json({
+          error: "Email domain not allowed",
+          field: "email",
+        });
+      }
+
+      // Verificar duplicados
+      const existingUser = await isUsernameOrEmailTaken(username, email);
+      if (existingUser) {
+        if (
+          existingUser.email === normalize(email) &&
+          existingUser.username === normalize(username)
+        ) {
+          return res.status(400).json({
+            error: "Email and Username already taken",
+          });
+        }
+        if (existingUser.email === normalize(email)) {
+          return res.status(409).json({
+            error: "Email already registered",
+            field: "email",
+          });
+        }
+        if (existingUser.username === normalize(username)) {
+          return res.status(409).json({
+            error: "Username already taken",
+            field: "username",
+          });
+        }
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const newAdmin = await User.create({
+        username: normalize(username),
+        email: normalize(email),
+        password: hashedPassword,
+        role: "admin", // Establecer como admin
+      });
+
+      const adminResponse = {
+        id: newAdmin._id,
+        username: newAdmin.username,
+        email: newAdmin.email,
+        role: newAdmin.role,
+        active: newAdmin.active,
+        registerDate: newAdmin.registerDate,
+      };
+
+      res.status(201).json({
+        message: "Admin created successfully",
+        user: adminResponse,
+      });
+    } catch (error) {
+      console.error("Error creating admin:", error);
+      res.status(500).json({
+        error: "Internal server error",
+      });
+    }
+  },
+
   createUser: async (req: Request, res: Response) => {
     try {
       const { username, email, password } = req.body;
