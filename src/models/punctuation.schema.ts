@@ -1,18 +1,15 @@
 import { Schema, model } from "mongoose";
-import { IPunctuation } from "@/interfaces/punctuation.interface";
+import { IRating } from "@/interfaces/rating.interface";
 
-const PunctuationSchema = new Schema<IPunctuation>(
+const PunctuationSchema = new Schema<IRating>(
   {
     value: { type: Number, min: 1, max: 5, default: 1 },
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    bar: { type: Schema.Types.ObjectId, ref: "Bar", required: true },
-    date: { type: Date, default: Date.now },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    barId: { type: Schema.Types.ObjectId, ref: "Bar", required: true },
+    createdAt: { type: Date, default: Date.now },
     active: { type: Boolean, default: true },
   },
   { versionKey: false }
 );
 
-export const Punctuation = model<IPunctuation>(
-  "Punctuation",
-  PunctuationSchema
-);
+export const Punctuation = model<IRating>("Punctuation", PunctuationSchema);

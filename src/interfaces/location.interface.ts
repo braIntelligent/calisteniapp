@@ -1,8 +1,11 @@
 import { Document, Types } from "mongoose";
 
 export interface ILocation extends Document {
-  coordinatex: string;
-  coordinatey: string;
-  bar: Types.ObjectId;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  address?: string;
+  barId: Types.ObjectId;
   active: boolean;
 }

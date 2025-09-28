@@ -6,12 +6,12 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Workout Management API',
+      title: 'CalistheniApp API',
       version: '1.0.0',
-      description: 'API para gestión de workout, usuarios, comentarios y puntuaciones',
+      description: 'API para gestión de ubicaciones de barras de calistenia. Los usuarios pueden publicar barras de ejercicio con ubicación GPS, descripción, imágenes, comentarios y puntuaciones.',
       contact: {
         name: 'API Support',
-        email: 'support@workoutmanagement.com',
+        email: 'support@calistheniapp.com',
       },
       license: {
         name: 'MIT',
@@ -23,10 +23,10 @@ const options = {
         url: 'http://localhost:3000/api/v1',
         description: 'Development server',
       },
-      {
-        url: 'https://api.workoutmanagement.com/v1',
-        description: 'Production server',
-      },
+      // {
+      //   url: 'https://api.calistheniapp.com/v1',
+      //   description: 'Production server',
+      // },
     ],
     components: {
       securitySchemes: {
@@ -193,19 +193,192 @@ const options = {
             },
           },
         },
-        // Esquemas para Bar (para futuro uso)
-        Bar: {
+        // Esquemas de Bar (equipamiento de calistenia)
+        CalisthenicsBar: {
+          type: 'object',
+          properties: {
+            id: { 
+              type: 'string',
+              description: 'ID único de la barra'
+            },
+            name: { 
+              type: 'string',
+              description: 'Nombre/título de la ubicación de la barra'
+            },
+            description: { 
+              type: 'string',
+              description: 'Descripción del equipamiento y ubicación'
+            },
+            creator: { 
+              type: 'string',
+              description: 'ID del usuario que publicó la barra'
+            },
+            location: {
+              type: 'object',
+              properties: {
+                coordinates: {
+                  type: 'object',
+                  properties: {
+                    latitude: { type: 'number', description: 'Latitud GPS' },
+                    longitude: { type: 'number', description: 'Longitud GPS' }
+                  }
+                },
+                address: { type: 'string', description: 'Dirección aproximada' }
+              }
+            },
+            images: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'URLs de imágenes del equipamiento'
+            },
+            equipment: {
+              type: 'object',
+              properties: {
+                pullUpBar: { type: 'boolean', description: 'Tiene barra para dominadas' },
+                parallelBars: { type: 'boolean', description: 'Tiene barras paralelas' },
+                wallBars: { type: 'boolean', description: 'Tiene espalderas' },
+                rings: { type: 'boolean', description: 'Tiene anillas' },
+                other: { type: 'string', description: 'Otro equipamiento disponible' }
+              }
+            },
+            comments: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'IDs de comentarios'
+            },
+            ratings: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'IDs de puntuaciones'
+            },
+            averageRating: {
+              type: 'number',
+              minimum: 1,
+              maximum: 5,
+              description: 'Puntuación promedio'
+            },
+            parking: { 
+              type: 'boolean',
+              description: 'Disponibilidad de estacionamiento cercano'
+            },
+            accessibility: {
+              type: 'boolean',
+              description: 'Accesible para personas con discapacidad'
+            },
+            lighting: {
+              type: 'boolean',
+              description: 'Tiene iluminación para entrenar de noche'
+            },
+            active: { 
+              type: 'boolean',
+              description: 'Estado activo de la publicación'
+            },
+            createdAt: { 
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de creación'
+            },
+            updatedAt: { 
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de última actualización'
+            }
+          },
+        },
+        CreateBarRequest: {
+          type: 'object',
+          required: ['name', 'description', 'location'],
+          properties: {
+            name: {
+              type: 'string',
+              minLength: 3,
+              maxLength: 100,
+              description: 'Nombre de la ubicación (ej: "Parque Central - Barras")'
+            },
+            description: {
+              type: 'string',
+              minLength: 10,
+              maxLength: 500,
+              description: 'Descripción detallada del equipamiento y ubicación'
+            },
+            location: {
+              type: 'object',
+              required: ['latitude', 'longitude'],
+              properties: {
+                latitude: { 
+                  type: 'number',
+                  minimum: -90,
+                  maximum: 90,
+                  description: 'Latitud GPS'
+                },
+                longitude: { 
+                  type: 'number',
+                  minimum: -180,
+                  maximum: 180,
+                  description: 'Longitud GPS'
+                },
+                address: {
+                  type: 'string',
+                  description: 'Dirección o referencia del lugar'
+                }
+              }
+            },
+            equipment: {
+              type: 'object',
+              properties: {
+                pullUpBar: { type: 'boolean', default: false },
+                parallelBars: { type: 'boolean', default: false },
+                wallBars: { type: 'boolean', default: false },
+                rings: { type: 'boolean', default: false },
+                other: { type: 'string' }
+              }
+            },
+            images: {
+              type: 'array',
+              items: { type: 'string' },
+              maxItems: 5,
+              description: 'URLs de imágenes (máximo 5)'
+            },
+            parking: { type: 'boolean', default: false },
+            accessibility: { type: 'boolean', default: false },
+            lighting: { type: 'boolean', default: false }
+          }
+        },
+        Comment: {
           type: 'object',
           properties: {
             id: { type: 'string' },
-            name: { type: 'string' },
-            description: { type: 'string' },
-            creator: { type: 'string' },
-            location: { type: 'string' },
-            parking: { type: 'boolean' },
-            active: { type: 'boolean' },
-            date: { type: 'string', format: 'date-time' },
-          },
+            text: { 
+              type: 'string',
+              description: 'Contenido del comentario'
+            },
+            author: { 
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                username: { type: 'string' }
+              }
+            },
+            barId: { type: 'string', description: 'ID de la barra comentada' },
+            createdAt: { type: 'string', format: 'date-time' },
+            active: { type: 'boolean' }
+          }
+        },
+        Rating: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            value: { 
+              type: 'number',
+              minimum: 1,
+              maximum: 5,
+              description: 'Puntuación de 1 a 5 estrellas'
+            },
+            userId: { type: 'string' },
+            barId: { type: 'string' },
+            createdAt: { type: 'string', format: 'date-time' },
+            active: { type: 'boolean' }
+          }
         },
       },
       responses: {
@@ -272,15 +445,31 @@ const options = {
     tags: [
       {
         name: 'Authentication',
-        description: 'Endpoints de autenticación',
+        description: 'Endpoints de autenticación de usuarios',
       },
       {
         name: 'Users',
-        description: 'Gestión de usuarios',
+        description: 'Gestión de perfiles de usuario',
       },
       {
         name: 'Admin',
         description: 'Funciones administrativas',
+      },
+      {
+        name: 'Calisthenics Bars',
+        description: 'Gestión de ubicaciones de barras de calistenia',
+      },
+      {
+        name: 'Comments',
+        description: 'Sistema de comentarios en las barras',
+      },
+      {
+        name: 'Ratings',
+        description: 'Sistema de puntuaciones y valoraciones',
+      },
+      {
+        name: 'Search',
+        description: 'Búsqueda y filtrado de barras por ubicación',
       },
     ],
   },

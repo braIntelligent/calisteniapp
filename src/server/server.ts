@@ -1,6 +1,7 @@
 // src/server/server.ts - CON SWAGGER INTEGRADO
 import express, { NextFunction, Request, Response } from "express";
 import userRouter from "@/routes/user.routes";
+import barRouter from "@/routes/bar.routes";
 import { swaggerUi, specs } from "@/config/swagger.config";
 
 const app = express();
@@ -15,7 +16,7 @@ app.use(
   swaggerUi.setup(specs, {
     explorer: true,
     customCss: ".swagger-ui .topbar { display: none }",
-    customSiteTitle: "WorkOut Management API Documentation",
+    customSiteTitle: "CalistheniApp API Documentation",
     swaggerOptions: {
       filter: true,
       showRequestHeaders: true,
@@ -43,12 +44,16 @@ app.get("/health", (req, res) => {
 
 // API Routes
 app.use("/api/v1/users", userRouter);
-// app.use("/api/v1/bars", barRouter) // Para futuro uso
+app.use("/api/v1/bars", barRouter); // Rutas de barras de calistenia
+// app.use("/api/v1/comments", commentRouter) // Sistema de comentarios
+// app.use("/api/v1/ratings", ratingRouter) // Sistema de puntuaciones
 
 // Root endpoint
 app.get("/", (req, res) => {
   res.json({
-    message: "Welcome to WorkOut Management API",
+    message: "Welcome to CalistheniApp API",
+    description:
+      "API para encontrar y compartir ubicaciones de barras de calistenia",
     version: "1.0.0",
     documentation: "/api-docs",
     health: "/health",
@@ -64,6 +69,9 @@ app.use((req, res, next) => {
       documentation: "/api-docs",
       health: "/health",
       users: "/api/v1/users",
+      bars: "/api/v1/bars ",
+      comments: "/api/v1/comments (coming soon)",
+      ratings: "/api/v1/ratings (coming soon)",
     },
   });
 });
