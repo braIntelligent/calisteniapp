@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IRating } from "@/interfaces/rating.interface";
+import { IRating } from "@/interfaces/punctuation.interface";
 
 const PunctuationSchema = new Schema<IRating>(
   {
