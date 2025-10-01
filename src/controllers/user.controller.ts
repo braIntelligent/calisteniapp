@@ -135,23 +135,23 @@ export const userController = {
       }
 
       // Verificar duplicados
-      const existingUser = await isUsernameOrEmailTaken(username, email);
-      if (existingUser) {
+      const user = await isUsernameOrEmailTaken(username, email);
+      if (user) {
         if (
-          existingUser.email === normalize(email) &&
-          existingUser.username === normalize(username)
+          user.email === normalize(email) &&
+          user.username === normalize(username)
         ) {
-          return res.status(400).json({
+          return res.status(409).json({
             error: "Email and Username already taken",
           });
         }
-        if (existingUser.email === normalize(email)) {
+        if (user.email === normalize(email)) {
           return res.status(409).json({
             error: "Email already registered",
             field: "email",
           });
         }
-        if (existingUser.username === normalize(username)) {
+        if (user.username === normalize(username)) {
           return res.status(409).json({
             error: "Username already taken",
             field: "username",
@@ -200,20 +200,20 @@ export const userController = {
       }
 
       // Verificar duplicados
-      const existingUser = await isUsernameOrEmailTaken(username, email);
-      if (existingUser) {
+      const user = await isUsernameOrEmailTaken(username, email);
+      if (user) {
         if (
-          existingUser.email === normalize(email) &&
-          existingUser.username === normalize(username)
+          user.email === normalize(email) &&
+          user.username === normalize(username)
         )
           return res
             .status(400)
             .json({ error: "Email and Username already taken" });
-        if (existingUser.email === normalize(email))
+        if (user.email === normalize(email))
           return res
             .status(409)
             .json({ error: "Email already registered", field: "email" });
-        if (existingUser.username === normalize(username))
+        if (user.username === normalize(username))
           return res
             .status(409)
             .json({ error: "Username already taken", field: "username" });
@@ -274,13 +274,12 @@ export const userController = {
       const { id } = req.params;
       const { newUsername, newEmail, newPassword, currentPassword } = req.body;
 
-      const existingUser = await User.findById(id);
-      if (!existingUser)
-        return res.status(404).json({ error: "User not found" });
+      const user = await User.findById(id);
+      if (!user) return res.status(404).json({ error: "User not found" });
 
       const isCurrentValidPassword = await comparePassword(
         currentPassword,
-        existingUser.password
+        user.password
       );
 
       if (!isCurrentValidPassword)
@@ -288,18 +287,18 @@ export const userController = {
 
       const updateData: any = {};
 
-      if (newUsername && normalize(newUsername) !== existingUser.username) {
+      if (newUsername && normalize(newUsername) !== user.username) {
         updateData.username = normalize(newUsername);
       }
 
-      if (newEmail && normalize(newEmail) !== existingUser.email) {
+      if (newEmail && normalize(newEmail) !== user.email) {
         updateData.email = normalize(newEmail);
       }
 
       if (newPassword) {
         const isSamePassword = await comparePassword(
           newPassword,
-          existingUser.password
+          user.password
         );
         if (!isSamePassword) {
           updateData.password = await hashPassword(newPassword);

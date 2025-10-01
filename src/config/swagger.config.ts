@@ -23,10 +23,10 @@ const options = {
         url: 'http://localhost:3000/api/v1',
         description: 'Development server',
       },
-      // {
-      //   url: 'https://api.calistheniapp.com/v1',
-      //   description: 'Production server',
-      // },
+      {
+        url: 'https://api.calistheniapp.com/v1',
+        description: 'Production server',
+      },
     ],
     components: {
       securitySchemes: {
@@ -347,7 +347,10 @@ const options = {
         Comment: {
           type: 'object',
           properties: {
-            id: { type: 'string' },
+            id: { 
+              type: 'string',
+              description: 'ID único del comentario'
+            },
             text: { 
               type: 'string',
               description: 'Contenido del comentario'
@@ -359,25 +362,99 @@ const options = {
                 username: { type: 'string' }
               }
             },
-            barId: { type: 'string', description: 'ID de la barra comentada' },
+            barId: { 
+              type: 'string', 
+              description: 'ID de la barra comentada' 
+            },
+            parentComment: {
+              type: 'string',
+              description: 'ID del comentario padre (si es respuesta)'
+            },
+            likes: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'IDs de usuarios que dieron like'
+            },
+            likesCount: {
+              type: 'integer',
+              description: 'Cantidad de likes'
+            },
+            isEdited: {
+              type: 'boolean',
+              description: 'Si el comentario fue editado'
+            },
+            active: { type: 'boolean' },
             createdAt: { type: 'string', format: 'date-time' },
-            active: { type: 'boolean' }
+            updatedAt: { type: 'string', format: 'date-time' }
           }
         },
         Rating: {
           type: 'object',
           properties: {
-            id: { type: 'string' },
+            id: { 
+              type: 'string',
+              description: 'ID único del rating'
+            },
             value: { 
               type: 'number',
               minimum: 1,
               maximum: 5,
               description: 'Puntuación de 1 a 5 estrellas'
             },
-            userId: { type: 'string' },
-            barId: { type: 'string' },
-            createdAt: { type: 'string', format: 'date-time' },
-            active: { type: 'boolean' }
+            user: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                username: { type: 'string' }
+              }
+            },
+            bar: { 
+              type: 'string',
+              description: 'ID de la barra calificada' 
+            },
+            review: {
+              type: 'string',
+              description: 'Reseña opcional'
+            },
+            criteria: {
+              type: 'object',
+              properties: {
+                equipment: { 
+                  type: 'number',
+                  minimum: 1,
+                  maximum: 5,
+                  description: 'Calidad del equipamiento'
+                },
+                location: { 
+                  type: 'number',
+                  minimum: 1,
+                  maximum: 5,
+                  description: 'Ubicación y accesibilidad'
+                },
+                maintenance: { 
+                  type: 'number',
+                  minimum: 1,
+                  maximum: 5,
+                  description: 'Estado de mantenimiento'
+                },
+                safety: { 
+                  type: 'number',
+                  minimum: 1,
+                  maximum: 5,
+                  description: 'Seguridad del área'
+                }
+              }
+            },
+            criteriaAverage: {
+              type: 'number',
+              description: 'Promedio de criterios'
+            },
+            hasReview: {
+              type: 'boolean',
+              description: 'Si tiene reseña'
+            },
+            active: { type: 'boolean' },
+            date: { type: 'string', format: 'date-time' }
           }
         },
       },
